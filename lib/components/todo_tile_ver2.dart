@@ -30,7 +30,7 @@ class ToDoTileV2 extends StatelessWidget {
                 Checkbox(
                   value: taskCompleted,
                   onChanged: onChanged,
-                  activeColor: Colors.pinkAccent,
+                  activeColor: Colors.blueAccent.shade400,
                 ),
                 // task name
                 Text(
@@ -44,10 +44,15 @@ class ToDoTileV2 extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             FloatingActionButton(
+              heroTag: 'tile$taskName',
               onPressed: () => deleteTask(),
+              mini: true,
+              focusColor: Colors.orange[900],
+              // foregroundColor: Colors.orange[900],
               child: const Icon(
                 Icons.delete,
                 semanticLabel: 'Delete',
+                size: 16,
               ),
             ),
           ],

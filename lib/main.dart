@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_first_app/bmi_calc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'home.dart';
-void main() async {
 
+void main() async {
   // init Hive
   await Hive.initFlutter();
 
@@ -22,11 +23,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'TODO App',
       theme: ThemeData(
-        primarySwatch: Colors.yellow,
+        primarySwatch: Colors.red,
       ),
-      home: const MyHomePage(title: 'TODO App Home Page'),
+      routes: {
+        '/': (context) => const MyHomePage(title: 'TODO App Home Page'),
+        '/calculator': (context) => const BMICalculator(),
+      },
+      initialRoute: '/',
+      // home: const MyHomePage(title: 'TODO App Home Page'),
     );
   }
 }
-
-
