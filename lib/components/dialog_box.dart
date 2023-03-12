@@ -17,7 +17,8 @@ class DialogBox extends StatelessWidget {
     return AlertDialog(
       backgroundColor: Colors.yellow[100],
       content: Container(
-        height: 120,
+        height: double.tryParse(MediaQuery.of(context).orientation.toString()),
+        width: double.tryParse(MediaQuery.of(context).orientation.toString()),
         child:
             Column(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
               // get user Input

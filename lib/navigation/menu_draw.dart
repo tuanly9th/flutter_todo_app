@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../bmi_calc.dart';
 import '../home.dart';
+import '../todo_screen.dart';
 
 class MenuDrawer extends StatelessWidget {
   const MenuDrawer({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -15,11 +15,12 @@ class MenuDrawer extends StatelessWidget {
   }
 
   List<Widget> buildMenuItems(BuildContext context) {
-    List<String> menuTitles = ['Home', 'BMI'];
+    int idx = 1;
+    List<String> menuTitles = ['Home', 'BMI', 'TODO'];
     List<Widget> menuItems = [];
     menuItems.add(DrawerHeader(
         child: Text(
-      'Golbo Fit',
+      'Menu',
       style: TextStyle(
         color: Colors.red.shade400,
         fontSize: 24,
@@ -28,10 +29,20 @@ class MenuDrawer extends StatelessWidget {
 
     menuTitles.forEach((element) {
       Widget screen = Container();
+      idx++;
       menuItems.add(ListTile(
-        title: Text(
-          element,
-          style: const TextStyle(fontSize: 18),
+        title: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.green[100 * idx],
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Center(
+            child: Text(
+              element,
+              style: const TextStyle(fontSize: 18),
+            ),
+          ),
         ),
         onTap: () {
           switch (element) {
@@ -41,13 +52,17 @@ class MenuDrawer extends StatelessWidget {
             case 'BMI':
               screen = const BMICalculator();
               break;
+            case 'TODO':
+              screen = const TodoPage();
+              break;
             // default:
             //   screen = Container(
             //     child: const Center(child: Text('Hello Flutter')),
             //   );
           }
           Navigator.of(context).pop();
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => screen));
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => screen));
         },
       ));
     });

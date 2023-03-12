@@ -19,4 +19,8 @@ class TodoDataBase {
   void updateData() {
     _todoBox.put('TodoList', todoList);
   }
+
+  void clearAllTodos() {
+    _todoBox.clear();
+  }
 }

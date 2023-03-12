@@ -14,6 +14,10 @@ class MenuBottom extends StatelessWidget {
         icon: Icon(Icons.calculate_outlined),
         label: 'BMI',
       ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.today_rounded),
+        label: 'TODO',
+      ),
     ],
     onTap: (value) {
       print(value);
@@ -23,6 +27,9 @@ class MenuBottom extends StatelessWidget {
           break;
         case 1:
           Navigator.pushNamed(context, '/calculator');
+          break;
+        case 2:
+          Navigator.pushNamed(context, '/todo');
           break;
       }
     },);
