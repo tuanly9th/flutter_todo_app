@@ -1,6 +1,10 @@
 // main.dart
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+// import 'package:path/path.dart';
 // import 'package:path/path.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +20,7 @@ class TodoPage extends StatefulWidget {
 
 class _TodoPageState extends State<TodoPage> {
   List<Map<String, dynamic>> _items = [];
+  List<Widget> imagesUpload = [];
   List<Widget> imagesTmp = [];
 
   TodoModel todoBox = TodoModel();
@@ -60,30 +65,57 @@ class _TodoPageState extends State<TodoPage> {
 
     // Display a snackbar
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An item has been deleted')));
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('An item has been deleted')));
   }
 
-  void _pickerFile() async {
-    dynamic result = await FilePicker.platform.pickFiles(
+  Future<void> _pickerFile(Function setState) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         dialogTitle: 'Upload files',
         type: FileType.custom,
         allowedExtensions: ['jpg', 'png', 'doc', 'docx', 'pdf']);
 
+    // List<Widget> imagesTmp = [];
     if (result != null) {
       for (PlatformFile file in result.files) {
         // Uint8List blobUrl = base64Decode(file.path.toString());
         List arr = file.path.toString().split('.');
+        List arr2 = file.path.toString().split('\\');
         // print(['jpg', 'png'].indexOf(arr.last));
         // final ext = extension();
-        // print(blobUrl);
+        print(arr2);
+        Directory documentDirectory = await getApplicationDocumentsDirectory();
+        print((documentDirectory.path + '\\flutter_demo\\' + arr2.last));
+        File(documentDirectory.path + '\\flutter_demo\\' + arr2.last)
+            .create(recursive: true)
+            .then((File file22) {
+          file22.writeAsBytes(File(file.path.toString()).readAsBytesSync());
+        });
         setState(() {
           if (['jpg', 'png'].contains(arr.last)) {
-            imagesTmp.add(Image(
-              image: FileImage(File(file.path.toString())),
-              width: 200,
+            print(MediaQuery.of(context).size.width);
+            imagesUpload.add(Container(
+              padding: const EdgeInsets.all(12),
+              child: Container(
+                // width: MediaQuery.of(context).size.width,
+                width: 100,
+                height: 80,
+                decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: FileImage(File(file.path.toString())),
+                      fit: BoxFit.cover,
+                    ),
+                    borderRadius: const BorderRadius.all(Radius.circular(12))),
+                // child: Image(
+                //   image: FileImage(File(file.path.toString())),
+                //   filterQuality: FilterQuality.high,
+                //   width: MediaQuery.of(context).devicePixelRatio,
+                // ),
+              ),
             ));
+
+// file.writeAsBytesSync(response.bodyBytes);
           }
           // print(imagesTmp);
         });
@@ -97,7 +129,7 @@ class _TodoPageState extends State<TodoPage> {
 
   // This function will be triggered when the floating button is pressed
   // It will also be triggered when you want to update an item
-  void _showForm(BuildContext ctx, int? itemKey) async {
+  void _showForm(BuildContext context, int? itemKey) async {
     if (itemKey != null) {
       final existingItem =
           _items.firstWhere((element) => element['key'] == itemKey);
@@ -109,116 +141,119 @@ class _TodoPageState extends State<TodoPage> {
     }
 
     showModalBottomSheet(
-        context: ctx,
+        context: context,
         elevation: 5,
         isScrollControlled: true,
         backgroundColor: Colors.blueGrey.shade100,
-        builder: (_) => ListView(
-              padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(ctx).viewInsets.bottom,
-                  top: 15,
-                  left: 15,
-                  right: 15),
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        FloatingActionButton(
-                            child: const Icon(
-                              Icons.arrow_back,
-                            ),
-                            onPressed: () {
-                              Navigator.pop(context);
-                            }),
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.all(16)),
-                              onPressed: () async {
-                                // Save new item
-                                if (itemKey == null) {
-                                  _createItem({
-                                    'title': _nameController.text,
-                                    'desc': _quantityController.text,
-                                  });
-                                }
+        builder: (context) => StatefulBuilder(
+                builder: (BuildContext context, StateSetter setModalState) {
+              return ListView(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                    top: 15,
+                    left: 15,
+                    right: 15),
+                children: [
+                  Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          FloatingActionButton(
+                              child: const Icon(
+                                Icons.arrow_back,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              }),
+                          Row(
+                            children: [
+                              ElevatedButton(
+                                style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.all(16)),
+                                onPressed: () async {
+                                  // Save new item
+                                  if (itemKey == null) {
+                                    _createItem({
+                                      'title': _nameController.text,
+                                      'desc': _quantityController.text,
+                                    });
+                                  }
 
-                                // update an existing item
-                                if (itemKey != null) {
-                                  _updateItem(itemKey, {
-                                    'title': _nameController.text.trim(),
-                                    'desc': _quantityController.text.trim()
-                                  });
-                                }
+                                  // update an existing item
+                                  if (itemKey != null) {
+                                    _updateItem(itemKey, {
+                                      'title': _nameController.text.trim(),
+                                      'desc': _quantityController.text.trim()
+                                    });
+                                  }
 
-                                // Clear the text fields
-                                _nameController.text = '';
-                                _quantityController.text = '';
+                                  // Clear the text fields
+                                  _nameController.text = '';
+                                  _quantityController.text = '';
 
-                                Navigator.of(context)
-                                    .pop(); // Close the bottom sheet
-                              },
-                              child: Text(
-                                  itemKey == null ? 'Create New' : 'Update'),
-                            ),
-                            const SizedBox(width: 12),
-                            itemKey != null
-                                ? IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    splashRadius: 24,
-                                    splashColor: Colors.black12,
-                                    hoverColor: Colors.blueGrey.shade100,
-                                    color: Colors.red,
-                                    onPressed: () {
-                                      _deleteItem(itemKey);
-                                      Navigator.pop(context);
-                                    },
-                                  )
-                                : Container(),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _nameController,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 28),
-                      decoration: InputDecoration(
-                          // hintText: 'Title',
-                          border: InputBorder.none,
-                          filled: true,
-                          fillColor: Colors.yellow.shade100,
-                          labelText: ('Title'),
-                          labelStyle: const TextStyle(fontSize: 12)),
-                    ),
-                    TextField(
-                      controller: _quantityController,
-                      keyboardType: TextInputType.multiline,
-                      minLines: 6,
-                      maxLines: null,
-                      decoration: InputDecoration(
-                          // hintText: 'Description',
-                          border: InputBorder.none,
-                          filled: true,
-                          fillColor: Colors.yellow.shade50,
-                          labelText: ('Description'),
-                          labelStyle: const TextStyle(fontSize: 12)),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Container(
-                      padding: EdgeInsets.all(20),
-                      child: imagesTmp.isEmpty
-                          ? Container() : Row(
-                            children: imagesTmp,
-                          )
+                                  Navigator.of(context)
+                                      .pop(); // Close the bottom sheet
+                                },
+                                child: Text(
+                                    itemKey == null ? 'Create New' : 'Update'),
+                              ),
+                              const SizedBox(width: 12),
+                              itemKey != null
+                                  ? IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      splashRadius: 24,
+                                      splashColor: Colors.black12,
+                                      hoverColor: Colors.blueGrey.shade100,
+                                      color: Colors.red,
+                                      onPressed: () {
+                                        _deleteItem(itemKey);
+                                        Navigator.pop(context);
+                                      },
+                                    )
+                                  : Container(),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      TextField(
+                        controller: _nameController,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 28),
+                        decoration: InputDecoration(
+                            // hintText: 'Title',
+                            border: InputBorder.none,
+                            filled: true,
+                            fillColor: Colors.yellow.shade100,
+                            labelText: ('Title'),
+                            labelStyle: const TextStyle(fontSize: 12)),
+                      ),
+                      TextField(
+                        controller: _quantityController,
+                        keyboardType: TextInputType.multiline,
+                        minLines: 6,
+                        maxLines: null,
+                        decoration: InputDecoration(
+                            // hintText: 'Description',
+                            border: InputBorder.none,
+                            filled: true,
+                            fillColor: Colors.yellow.shade50,
+                            labelText: ('Description'),
+                            labelStyle: const TextStyle(fontSize: 12)),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Container(
+                          padding: EdgeInsets.all(20),
+                          child: imagesUpload.isEmpty
+                              ? Container()
+                              : Row(
+                                  children: imagesUpload,
+                                )
                           // : ListView.builder(
                           //     scrollDirection: Axis.horizontal,
                           //     itemCount: imagesTmp.length,
@@ -230,23 +265,27 @@ class _TodoPageState extends State<TodoPage> {
                           //         width: 200,
                           //       );
                           //     }),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        _pickerFile();
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.all(5),
-                        child: Icon(Icons.attach_file),
+                          ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _pickerFile(setModalState);
+                          // setModalState(() {
+                          //   imagesUpload = [...imagesTmp];
+                          // });
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Icon(Icons.attach_file),
+                        ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    )
-                  ],
-                )
-              ],
-            ));
+                      const SizedBox(
+                        height: 15,
+                      )
+                    ],
+                  )
+                ],
+              );
+            }));
   }
 
   @override
@@ -311,8 +350,10 @@ class _TodoPageState extends State<TodoPage> {
                             IconButton(
                                 icon: const Icon(Icons.edit),
                                 iconSize: 24,
-                                onPressed: () =>
-                                    _showForm(context, currentItem['key'])),
+                                onPressed: () {
+                                  _showForm(context, currentItem['key']);
+                                  print(getApplicationDocumentsDirectory());
+                                }),
                           ],
                         ),
                       ),
