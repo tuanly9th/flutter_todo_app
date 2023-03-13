@@ -8,6 +8,7 @@ class TodoModel {
 
     final data = _todoBox.keys.map((key) {
       final value = _todoBox.get(key);
+      // _todoBox.put(key, {...value, 'isCompleted': false});
       return {'key': key, 'title': value['title'], 'desc': value['desc'], 'assets' : value['assets'], 'isCompleted': value['isCompleted']};
     }).toList();
 
@@ -22,7 +23,7 @@ class TodoModel {
   }
 
    Future<void> updateItem(int itemKey, Map<String, dynamic> item) async {
-    await _todoBox.put(itemKey, item);
+    await _todoBox.put(itemKey, {..._todoBox.get(itemKey), ...item});
   }
 
   Future<void> deleteItem(int itemKey) async {

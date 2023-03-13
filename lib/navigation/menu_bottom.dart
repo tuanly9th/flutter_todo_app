@@ -8,7 +8,6 @@ class MenuBottom extends StatefulWidget {
 }
 
 class _MenuBottomState extends State<MenuBottom> {
-  @override
   void _changeTab(int value) {
     switch (value) {
       case 0:

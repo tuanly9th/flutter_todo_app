@@ -1,9 +1,9 @@
 // main.dart
-import 'dart:ffi';
-
+import 'dart:convert';
+import 'dart:io';
+// import 'package:path/path.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'navigation/menu_draw.dart';
 import 'navigation/menu_bottom.dart';
 import 'models/todo_model.dart';
@@ -16,13 +16,14 @@ class TodoPage extends StatefulWidget {
 
 class _TodoPageState extends State<TodoPage> {
   List<Map<String, dynamic>> _items = [];
+  List<Widget> imagesTmp = [];
 
-  final _todoBox = Hive.box('todo_box');
   TodoModel todoBox = TodoModel();
 
   @override
   void initState() {
     super.initState();
+    // todoBox.loadData();
     _refreshItems(); // Load data when app starts
   }
 
@@ -63,6 +64,33 @@ class _TodoPageState extends State<TodoPage> {
         const SnackBar(content: Text('An item has been deleted')));
   }
 
+  void _pickerFile() async {
+    dynamic result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        dialogTitle: 'Upload files',
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'png', 'doc', 'docx', 'pdf']);
+
+    if (result != null) {
+      for (PlatformFile file in result.files) {
+        // Uint8List blobUrl = base64Decode(file.path.toString());
+        List arr = file.path.toString().split('.');
+        // print(['jpg', 'png'].indexOf(arr.last));
+        // final ext = extension();
+        // print(blobUrl);
+        setState(() {
+          if (['jpg', 'png'].contains(arr.last)) {
+            imagesTmp.add(Image(
+              image: FileImage(File(file.path.toString())),
+              width: 200,
+            ));
+          }
+          // print(imagesTmp);
+        });
+      }
+    }
+  }
+
   // TextFields' controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
@@ -84,138 +112,140 @@ class _TodoPageState extends State<TodoPage> {
         context: ctx,
         elevation: 5,
         isScrollControlled: true,
-        builder: (_) => Container(
+        backgroundColor: Colors.blueGrey.shade100,
+        builder: (_) => ListView(
               padding: EdgeInsets.only(
                   bottom: MediaQuery.of(ctx).viewInsets.bottom,
                   top: 15,
                   left: 15,
                   right: 15),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      FloatingActionButton(
-                          child: const Icon(
-                            Icons.arrow_back,
-                          ),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          }),
-                      Row(
-                        children: [
-                          ElevatedButton(
-                            style: TextButton.styleFrom(
-                                padding: const EdgeInsets.all(16)),
-                            onPressed: () async {
-                              // Save new item
-                              if (itemKey == null) {
-                                _createItem({
-                                  'title': _nameController.text,
-                                  'desc': _quantityController.text,
-                                });
-                              }
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        FloatingActionButton(
+                            child: const Icon(
+                              Icons.arrow_back,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            }),
+                        Row(
+                          children: [
+                            ElevatedButton(
+                              style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.all(16)),
+                              onPressed: () async {
+                                // Save new item
+                                if (itemKey == null) {
+                                  _createItem({
+                                    'title': _nameController.text,
+                                    'desc': _quantityController.text,
+                                  });
+                                }
 
-                              // update an existing item
-                              if (itemKey != null) {
-                                _updateItem(itemKey, {
-                                  'title': _nameController.text.trim(),
-                                  'desc': _quantityController.text.trim()
-                                });
-                              }
+                                // update an existing item
+                                if (itemKey != null) {
+                                  _updateItem(itemKey, {
+                                    'title': _nameController.text.trim(),
+                                    'desc': _quantityController.text.trim()
+                                  });
+                                }
 
-                              // Clear the text fields
-                              _nameController.text = '';
-                              _quantityController.text = '';
+                                // Clear the text fields
+                                _nameController.text = '';
+                                _quantityController.text = '';
 
-                              Navigator.of(context)
-                                  .pop(); // Close the bottom sheet
-                            },
-                            child:
-                                Text(itemKey == null ? 'Create New' : 'Update'),
-                          ),
-                          const SizedBox(width: 12),
-                          itemKey != null
-                              ? IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  splashRadius: 24,
-                                  splashColor: Colors.black12,
-                                  hoverColor: Colors.blueGrey.shade100,
-                                  color: Colors.red,
-                                  onPressed: () {
-                                    _deleteItem(itemKey);
-                                    Navigator.pop(context);
-                                  },
-                                )
-                              : Container(),
-                        ],
+                                Navigator.of(context)
+                                    .pop(); // Close the bottom sheet
+                              },
+                              child: Text(
+                                  itemKey == null ? 'Create New' : 'Update'),
+                            ),
+                            const SizedBox(width: 12),
+                            itemKey != null
+                                ? IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    splashRadius: 24,
+                                    splashColor: Colors.black12,
+                                    hoverColor: Colors.blueGrey.shade100,
+                                    color: Colors.red,
+                                    onPressed: () {
+                                      _deleteItem(itemKey);
+                                      Navigator.pop(context);
+                                    },
+                                  )
+                                : Container(),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _nameController,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 28),
+                      decoration: InputDecoration(
+                          // hintText: 'Title',
+                          border: InputBorder.none,
+                          filled: true,
+                          fillColor: Colors.yellow.shade100,
+                          labelText: ('Title'),
+                          labelStyle: const TextStyle(fontSize: 12)),
+                    ),
+                    TextField(
+                      controller: _quantityController,
+                      keyboardType: TextInputType.multiline,
+                      minLines: 6,
+                      maxLines: null,
+                      decoration: InputDecoration(
+                          // hintText: 'Description',
+                          border: InputBorder.none,
+                          filled: true,
+                          fillColor: Colors.yellow.shade50,
+                          labelText: ('Description'),
+                          labelStyle: const TextStyle(fontSize: 12)),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(20),
+                      child: imagesTmp.isEmpty
+                          ? Container() : Row(
+                            children: imagesTmp,
+                          )
+                          // : ListView.builder(
+                          //     scrollDirection: Axis.horizontal,
+                          //     itemCount: imagesTmp.length,
+                          //     itemBuilder: (_, index) {
+                          //       print(imagesTmp[index]);
+                          //       // return Text('data$index');
+                          //       return Image(
+                          //         image: FileImage(imagesTmp[index]),
+                          //         width: 200,
+                          //       );
+                          //     }),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        _pickerFile();
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(5),
+                        child: Icon(Icons.attach_file),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  TextField(
-                    controller: _nameController,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 28),
-                    decoration: InputDecoration(
-                        hintText: 'Title',
-                        border: InputBorder.none,
-                        filled: true,
-                        fillColor: Colors.yellow.shade100,
-                        labelText: ('Title'),
-                        labelStyle: const TextStyle(fontSize: 12)),
-                  ),
-
-                  TextField(
-                    controller: _quantityController,
-                    keyboardType: TextInputType.multiline,
-                    minLines: 6,
-                    maxLines: 20,
-                    decoration: InputDecoration(
-                        hintText: 'Description',
-                        border: InputBorder.none,
-                        filled: true,
-                        fillColor: Colors.yellow.shade50,
-                        labelText: ('Description'),
-                        labelStyle: const TextStyle(fontSize: 12)),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  // ElevatedButton(
-                  //   onPressed: () async {
-                  //     // Save new item
-                  //     if (itemKey == null) {
-                  //       _createItem({
-                  //         'title': _nameController.text,
-                  //         'desc': _quantityController.text,
-                  //       });
-                  //     }
-
-                  //     // update an existing item
-                  //     if (itemKey != null) {
-                  //       _updateItem(itemKey, {
-                  //         'title': _nameController.text.trim(),
-                  //         'desc': _quantityController.text.trim()
-                  //       });
-                  //     }
-
-                  //     // Clear the text fields
-                  //     _nameController.text = '';
-                  //     _quantityController.text = '';
-
-                  //     Navigator.of(context).pop(); // Close the bottom sheet
-                  //   },
-                  //   child: Text(itemKey == null ? 'Create New' : 'Update'),
-                  // ),
-                  const SizedBox(
-                    height: 15,
-                  )
-                ],
-              ),
+                    ),
+                    const SizedBox(
+                      height: 15,
+                    )
+                  ],
+                )
+              ],
             ));
   }
 
@@ -239,6 +269,9 @@ class _TodoPageState extends State<TodoPage> {
               itemCount: _items.length,
               itemBuilder: (_, index) {
                 final currentItem = _items[index];
+                final desc = currentItem['desc'].toString().length > 150
+                    ? '${currentItem['desc'].toString().substring(0, 150)}...'
+                    : currentItem['desc'];
                 return Card(
                   color: currentItem['isCompleted']
                       ? const Color.fromARGB(255, 130, 175, 4)
@@ -257,13 +290,14 @@ class _TodoPageState extends State<TodoPage> {
                         title: Text(
                           currentItem['title'],
                           style: TextStyle(
+                            fontWeight: FontWeight.bold,
                             decoration: currentItem['isCompleted']
                                 ? TextDecoration.lineThrough
                                 : null,
                           ),
                         ),
                         subtitle: Text(
-                          currentItem['desc'],
+                          desc,
                           style: TextStyle(
                             decoration: currentItem['isCompleted']
                                 ? TextDecoration.lineThrough
@@ -279,40 +313,9 @@ class _TodoPageState extends State<TodoPage> {
                                 iconSize: 24,
                                 onPressed: () =>
                                     _showForm(context, currentItem['key'])),
-                            // Delete button
-                            // IconButton(
-                            //   icon: const Icon(Icons.delete),
-                            //   onPressed: () => _deleteItem(currentItem['key']),
-                            // ),
                           ],
                         ),
                       ),
-                      // ListTile(
-                      //   title: Text(currentItem['title']),
-                      //   subtitle: Text(currentItem['desc'].toString().length >
-                      //           150
-                      //       ? '${currentItem['desc'].toString().substring(0, 150)}...'
-                      //       : currentItem['desc'].toString()),
-                      //   trailing: Row(
-                      //     mainAxisSize: MainAxisSize.min,
-                      //     children: [
-                      //       // Edit button
-                      //       // IconButton(
-                      //       //     icon: const Icon(Icons.edit),
-                      //       //     onPressed: () =>
-                      //       //         _showForm(context, currentItem['key'])),
-                      //       // Delete button
-                      //       IconButton(
-                      //         icon: const Icon(Icons.delete),
-                      //         onPressed: () => _deleteItem(currentItem['key']),
-                      //       ),
-                      //     ],
-                      //   ),
-                      //   onTap: () {
-                      //     print('tab press list');
-                      //     _showForm(context, currentItem['key']);
-                      //   },
-                      // ),
                     ],
                   ),
                 );
