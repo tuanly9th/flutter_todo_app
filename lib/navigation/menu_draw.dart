@@ -45,24 +45,23 @@ class MenuDrawer extends StatelessWidget {
           ),
         ),
         onTap: () {
+          Navigator.of(context).pop();
           switch (element) {
             case 'Home':
               screen = const MyHomePage(title: 'Home');
+              Navigator.pushNamed(context, '/');
               break;
             case 'BMI':
               screen = const BMICalculator();
+              Navigator.pushNamed(context, '/calculator');
               break;
             case 'TODO':
               screen = const TodoPage();
+              Navigator.pushNamed(context, '/todo');
               break;
-            // default:
-            //   screen = Container(
-            //     child: const Center(child: Text('Hello Flutter')),
-            //   );
           }
-          Navigator.of(context).pop();
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (context) => screen));
+          // Navigator.of(context)
+          //     .push(MaterialPageRoute(builder: (context) => screen));
         },
       ));
     });
