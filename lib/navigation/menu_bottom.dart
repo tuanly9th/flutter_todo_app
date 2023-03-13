@@ -8,11 +8,8 @@ class MenuBottom extends StatefulWidget {
 }
 
 class _MenuBottomState extends State<MenuBottom> {
-  int _currentIndex = 0;
   @override
   void _changeTab(int value) {
-    // print(value);
-    // print(ModalRoute.of(context)?.settings.name);
     switch (value) {
       case 0:
         if ('/' != ModalRoute.of(context)?.settings.name) {
@@ -30,9 +27,6 @@ class _MenuBottomState extends State<MenuBottom> {
         }
         break;
     }
-    setState(() {
-      _currentIndex = value;
-    });
   }
 
   int getIndex() {

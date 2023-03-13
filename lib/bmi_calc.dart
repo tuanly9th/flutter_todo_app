@@ -13,7 +13,9 @@ class BMICalculator extends StatelessWidget {
       ),
       drawer: const MenuDrawer(),
       bottomNavigationBar: const MenuBottom(),
-      body: const Center(child: FlutterLogo()),
+      body: const Center(child: FlutterLogo(
+        size: 250,
+      )),
     );
   }
 }

@@ -104,65 +104,113 @@ class _TodoPageState extends State<TodoPage> {
                           onPressed: () {
                             Navigator.pop(context);
                           }),
-                      itemKey != null
-                          ? IconButton(
-                              icon: const Icon(Icons.delete),
-                              color: Colors.red,
-                              onPressed: () {
-                                _deleteItem(itemKey);
-                                Navigator.pop(context);
-                              },
-                            )
-                          : Column(),
+                      Row(
+                        children: [
+                          ElevatedButton(
+                            style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(16)),
+                            onPressed: () async {
+                              // Save new item
+                              if (itemKey == null) {
+                                _createItem({
+                                  'title': _nameController.text,
+                                  'desc': _quantityController.text,
+                                });
+                              }
+
+                              // update an existing item
+                              if (itemKey != null) {
+                                _updateItem(itemKey, {
+                                  'title': _nameController.text.trim(),
+                                  'desc': _quantityController.text.trim()
+                                });
+                              }
+
+                              // Clear the text fields
+                              _nameController.text = '';
+                              _quantityController.text = '';
+
+                              Navigator.of(context)
+                                  .pop(); // Close the bottom sheet
+                            },
+                            child:
+                                Text(itemKey == null ? 'Create New' : 'Update'),
+                          ),
+                          const SizedBox(width: 12),
+                          itemKey != null
+                              ? IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  splashRadius: 24,
+                                  splashColor: Colors.black12,
+                                  hoverColor: Colors.blueGrey.shade100,
+                                  color: Colors.red,
+                                  onPressed: () {
+                                    _deleteItem(itemKey);
+                                    Navigator.pop(context);
+                                  },
+                                )
+                              : Container(),
+                        ],
+                      ),
                     ],
                   ),
+                  const SizedBox(height: 24),
+
                   TextField(
                     controller: _nameController,
-                    decoration:
-                        const InputDecoration(hintText: 'Input something'),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 28),
+                    decoration: InputDecoration(
+                        hintText: 'Title',
+                        border: InputBorder.none,
+                        filled: true,
+                        fillColor: Colors.yellow.shade100,
+                        labelText: ('Title'),
+                        labelStyle: const TextStyle(fontSize: 12)),
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
+
                   TextField(
                     controller: _quantityController,
                     keyboardType: TextInputType.multiline,
                     minLines: 6,
-                    maxLines: 12,
+                    maxLines: 20,
                     decoration: InputDecoration(
                         hintText: 'Description',
                         border: InputBorder.none,
-                        fillColor: Colors.yellow.shade100),
+                        filled: true,
+                        fillColor: Colors.yellow.shade50,
+                        labelText: ('Description'),
+                        labelStyle: const TextStyle(fontSize: 12)),
                   ),
                   const SizedBox(
                     height: 20,
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      // Save new item
-                      if (itemKey == null) {
-                        _createItem({
-                          'title': _nameController.text,
-                          'desc': _quantityController.text,
-                        });
-                      }
+                  // ElevatedButton(
+                  //   onPressed: () async {
+                  //     // Save new item
+                  //     if (itemKey == null) {
+                  //       _createItem({
+                  //         'title': _nameController.text,
+                  //         'desc': _quantityController.text,
+                  //       });
+                  //     }
 
-                      // update an existing item
-                      if (itemKey != null) {
-                        _updateItem(itemKey, {
-                          'title': _nameController.text.trim(),
-                          'desc': _quantityController.text.trim()
-                        });
-                      }
+                  //     // update an existing item
+                  //     if (itemKey != null) {
+                  //       _updateItem(itemKey, {
+                  //         'title': _nameController.text.trim(),
+                  //         'desc': _quantityController.text.trim()
+                  //       });
+                  //     }
 
-                      // Clear the text fields
-                      _nameController.text = '';
-                      _quantityController.text = '';
+                  //     // Clear the text fields
+                  //     _nameController.text = '';
+                  //     _quantityController.text = '';
 
-                      Navigator.of(context).pop(); // Close the bottom sheet
-                    },
-                    child: Text(itemKey == null ? 'Create New' : 'Update'),
-                  ),
+                  //     Navigator.of(context).pop(); // Close the bottom sheet
+                  //   },
+                  //   child: Text(itemKey == null ? 'Create New' : 'Update'),
+                  // ),
                   const SizedBox(
                     height: 15,
                   )
@@ -209,13 +257,17 @@ class _TodoPageState extends State<TodoPage> {
                         title: Text(
                           currentItem['title'],
                           style: TextStyle(
-                            decoration: currentItem['isCompleted'] ? TextDecoration.lineThrough : null,
+                            decoration: currentItem['isCompleted']
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
                         ),
                         subtitle: Text(
                           currentItem['desc'],
                           style: TextStyle(
-                            decoration: currentItem['isCompleted'] ? TextDecoration.lineThrough : null,
+                            decoration: currentItem['isCompleted']
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
                         ),
                         secondary: Row(
