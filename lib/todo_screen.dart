@@ -9,8 +9,7 @@ import 'navigation/menu_bottom.dart';
 import 'models/todo_model.dart';
 
 class TodoPage extends StatefulWidget {
-  const TodoPage({Key? key}) : super(key: key);
-
+  const TodoPage({super.key});
   @override
   State<TodoPage> createState() => _TodoPageState();
 }
@@ -36,9 +35,8 @@ class _TodoPageState extends State<TodoPage> {
 
   // Create new item
   void _createItem(Map<String, dynamic> newItem) {
-    // await _shoppingBox.add(newItem);
     todoBox.createItem(newItem);
-    _refreshItems(); // update the UI
+    _refreshItems();
   }
 
   // Retrieve a single item from the database by using its key
@@ -49,15 +47,15 @@ class _TodoPageState extends State<TodoPage> {
   // }
 
   // Update a single item
-  Future<void> _updateItem(int itemKey, Map<String, dynamic> item) async {
-    await _todoBox.put(itemKey, item);
-    _refreshItems(); // Update the UI
+  void _updateItem(int itemKey, Map<String, dynamic> item) {
+    todoBox.updateItem(itemKey, item);
+    _refreshItems();
   }
 
   // Delete a single item
   Future<void> _deleteItem(int itemKey) async {
-    await _todoBox.delete(itemKey);
-    _refreshItems(); // update the UI
+    await todoBox.deleteItem(itemKey);
+    _refreshItems();
 
     // Display a snackbar
     if (!mounted) return;
@@ -72,14 +70,14 @@ class _TodoPageState extends State<TodoPage> {
   // This function will be triggered when the floating button is pressed
   // It will also be triggered when you want to update an item
   void _showForm(BuildContext ctx, int? itemKey) async {
-    // itemKey == null -> create new item
-    // itemKey != null -> update an existing item
-
     if (itemKey != null) {
       final existingItem =
           _items.firstWhere((element) => element['key'] == itemKey);
       _nameController.text = existingItem['title'];
       _quantityController.text = existingItem['desc'];
+    } else {
+      _nameController.text = '';
+      _quantityController.text = '';
     }
 
     showModalBottomSheet(
@@ -145,7 +143,7 @@ class _TodoPageState extends State<TodoPage> {
                       if (itemKey == null) {
                         _createItem({
                           'title': _nameController.text,
-                          'desc': _quantityController.text
+                          'desc': _quantityController.text,
                         });
                       }
 
