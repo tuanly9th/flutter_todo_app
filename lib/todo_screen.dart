@@ -56,6 +56,25 @@ class _TodoPageState extends State<TodoPage> {
     _refreshItems();
   }
 
+  void _saveComment(int itemKey, Function setState) {
+    // print('text comment');
+    // print(_commentController.text);
+    if (_commentController.text != '') {
+      todoBox.updateItemComment(itemKey, _commentController.text.toString());
+      setState(() {
+        _refreshItems();
+        _commentController.text = '';
+      });
+    }
+  }
+
+  void _deleteComment(int itemKey, String indexComment, setState) {
+    todoBox.deleteComment(itemKey, indexComment);
+    setState(() {
+      _refreshItems();
+    });
+  }
+
   // Delete a single item
   Future<void> _deleteItem(int itemKey) async {
     await todoBox.deleteItem(itemKey);
@@ -89,80 +108,37 @@ class _TodoPageState extends State<TodoPage> {
     // List<Widget> imagesTmp = [];
     if (result != null) {
       for (PlatformFile file in result.files) {
-        // Uint8List blobUrl = base64Decode(file.path.toString());
         List arr = file.path.toString().split('.');
-        List arr2 = file.path.toString().split('\\');
-        // print(['jpg', 'png'].indexOf(arr.last));
-        // final ext = extension();
-        // print(arr2);
-        // Directory documentDirectory = await getApplicationDocumentsDirectory();
-        // print((documentDirectory.path + '\\flutter_demo\\' + arr2.last));
-        // File(documentDirectory.path + '\\flutter_demo\\' + arr2.last)
-        //     .create(recursive: true)
-        //     .then((File file22) {
-        //   file22.writeAsBytes(File(file.path.toString()).readAsBytesSync());
-        // });
         setState(() {
           if (['jpg', 'png'].contains(arr.last)) {
-            print(MediaQuery.of(context).size.width);
             imagesPath.add(file.path.toString());
-            // imagesUploaded.add(Container(
-            //   padding: const EdgeInsets.all(12),
-            //   child: Container(
-            //     // width: MediaQuery.of(context).size.width,
-            //     width: 80,
-            //     height: 60,
-            //     decoration: BoxDecoration(
-            //         image: DecorationImage(
-            //           image: FileImage(File(file.path.toString())),
-            //           fit: BoxFit.cover,
-            //         ),
-            //         borderRadius: const BorderRadius.all(Radius.circular(12))),
-            //     child: ElevatedButton(
-            //       style: const ButtonStyle(
-            //           backgroundColor:
-            //               MaterialStatePropertyAll(Colors.transparent)),
-            //       onPressed: () {},
-            //       child: Text(
-            //         arr2.last.toString().length > 15
-            //             ? arr2.last.toString().substring(
-            //                 arr2.last.toString().length - 15,
-            //                 arr2.last.toString().length)
-            //             : arr2.last.toString(),
-            //         style: const TextStyle(fontSize: 8),
-            //       ),
-            //     ),
-            //   ),
-            // ));
-
-// file.writeAsBytesSync(response.bodyBytes);
           }
-          // print(imagesTmp);
         });
       }
     }
   }
 
   // TextFields' controllers
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _quantityController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
 
   // This function will be triggered when the floating button is pressed
-  // It will also be triggered when you want to update an item
   void _showForm(BuildContext context, int? itemKey) async {
-    print('object');
     print(MediaQuery.of(context).size.width);
+    dynamic currentItemComment = [];
     if (itemKey != null) {
       final existingItem =
           _items.firstWhere((element) => element['key'] == itemKey);
-      _nameController.text = existingItem['title'];
-      _quantityController.text = existingItem['desc'];
+      currentItemComment = existingItem['comments'] ?? [];
+      _titleController.text = existingItem['title'];
+      _descController.text = existingItem['desc'];
       setState(() {
         imagesUploaded = existingItem['assets'] ?? [];
       });
     } else {
-      _nameController.text = '';
-      _quantityController.text = '';
+      _titleController.text = '';
+      _descController.text = '';
       setState(() {
         imagesPath = [];
         imagesUploaded = [];
@@ -173,7 +149,7 @@ class _TodoPageState extends State<TodoPage> {
         context: context,
         elevation: 5,
         isScrollControlled: true,
-        backgroundColor: Colors.blueGrey.shade100,
+        backgroundColor: Colors.yellow.shade50,
         builder: (context) => StatefulBuilder(
                 builder: (BuildContext context, StateSetter setModalState) {
               return Stack(
@@ -184,8 +160,8 @@ class _TodoPageState extends State<TodoPage> {
                         // bottom: MediaQuery.of(context).viewInsets.bottom,
                         bottom: 100,
                         top: 60,
-                        left: 15,
-                        right: 15),
+                        left: 0,
+                        right: 0),
                     children: [
                       Column(
                         mainAxisSize: MainAxisSize.max,
@@ -193,7 +169,7 @@ class _TodoPageState extends State<TodoPage> {
                         children: [
                           // const SizedBox(height: 24),
                           TextField(
-                            controller: _nameController,
+                            controller: _titleController,
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 28),
                             decoration: InputDecoration(
@@ -205,7 +181,7 @@ class _TodoPageState extends State<TodoPage> {
                                 labelStyle: const TextStyle(fontSize: 12)),
                           ),
                           TextField(
-                            controller: _quantityController,
+                            controller: _descController,
                             keyboardType: TextInputType.multiline,
                             minLines: 6,
                             maxLines: null,
@@ -221,45 +197,114 @@ class _TodoPageState extends State<TodoPage> {
                             height: 20,
                           ),
                           Container(
-                              width: MediaQuery.of(context).size.width,
-                              // height: 400,
-                              padding: const EdgeInsets.all(20),
-                              child: Wrap(
-                                  // scrollDirection: Axis.horizontal,
-                                  children: <Widget>[
-                                    for (var path in [
-                                      ...imagesUploaded,
-                                      ...imagesPath
-                                    ])
-                                      Container(
-                                        // width: MediaQuery.of(context).size.width,
-                                        margin: const EdgeInsets.all(12),
-                                        width: 80,
-                                        height: 60,
-                                        decoration: BoxDecoration(
-                                            image: DecorationImage(
-                                              image: FileImage(File(path)),
-                                              fit: BoxFit.cover,
-                                            ),
-                                            borderRadius:
-                                                const BorderRadius.all(
-                                                    Radius.circular(12))),
-                                        child: ElevatedButton(
-                                          style: const ButtonStyle(
-                                              shadowColor:
-                                                  MaterialStatePropertyAll(
-                                                      Colors.transparent),
-                                              backgroundColor:
-                                                  MaterialStatePropertyAll(
-                                                      Colors.transparent)),
-                                          onPressed: () {},
-                                          child: const Text(
-                                            'Hello',
-                                            style: TextStyle(fontSize: 8),
+                            width: MediaQuery.of(context).size.width,
+                            // height: 400,
+                            padding: const EdgeInsets.all(20),
+                            child: Wrap(
+                                // scrollDirection: Axis.horizontal,
+                                children: <Widget>[
+                                  for (var path in [
+                                    ...imagesUploaded,
+                                    ...imagesPath
+                                  ])
+                                    Container(
+                                      // width: MediaQuery.of(context).size.width,
+                                      margin: const EdgeInsets.all(12),
+                                      width: 80,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image: FileImage(File(path)),
+                                            fit: BoxFit.cover,
                                           ),
+                                          borderRadius: const BorderRadius.all(
+                                              Radius.circular(12))),
+                                      child: ElevatedButton(
+                                        style: const ButtonStyle(
+                                            shadowColor:
+                                                MaterialStatePropertyAll(
+                                                    Colors.transparent),
+                                            backgroundColor:
+                                                MaterialStatePropertyAll(
+                                                    Colors.transparent)),
+                                        onPressed: () {},
+                                        child: const Text(
+                                          'Hello',
+                                          style: TextStyle(fontSize: 8),
                                         ),
                                       ),
-                                  ])),
+                                    ),
+                                ]),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                for (var comment in currentItemComment)
+                                  Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Flexible(
+                                          fit: FlexFit.loose,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              // border: BoxBorder(),
+                                              borderRadius:
+                                                  const BorderRadius.all(
+                                                      Radius.circular(20)),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                    color: Colors.lime.shade400,
+                                                    blurRadius: 2,
+                                                    spreadRadius: 0)
+                                              ],
+                                            ),
+                                            // width: MediaQuery.of(context).size.width,
+                                            margin: const EdgeInsets.only(
+                                                top: 12, bottom: 12, right: 0),
+                                            padding: const EdgeInsets.only(
+                                                top: 12,
+                                                bottom: 12,
+                                                left: 24,
+                                                right: 24),
+                                            child: Text(
+                                              comment,
+                                              softWrap: true,
+                                              // overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.left,
+                                              style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontStyle: FontStyle.italic),
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          child: IconButton(
+                                            iconSize: 16,
+                                            onPressed: () {
+                                              if (itemKey != null) {
+                                                _deleteComment(
+                                                    itemKey, comment, setModalState);
+                                              }
+                                            },
+                                            icon:
+                                                const Icon(Icons.remove_circle),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                              ],
+                            ),
+                          ),
                           // ElevatedButton(
                           //   onPressed: () {
                           //     _pickerFile(setModalState);
@@ -284,10 +329,7 @@ class _TodoPageState extends State<TodoPage> {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: <Color>[
-                          Colors.blue.withAlpha(255),
-                          Colors.blue.shade100
-                        ],
+                        colors: <Color>[Colors.orange, Colors.yellow.shade100],
                       ),
                     ),
                     child: Row(
@@ -311,8 +353,8 @@ class _TodoPageState extends State<TodoPage> {
                                 // Save new item
                                 if (itemKey == null) {
                                   _createItem({
-                                    'title': _nameController.text,
-                                    'desc': _quantityController.text,
+                                    'title': _titleController.text,
+                                    'desc': _descController.text,
                                     'assets': [...imagesUploaded, ...imagesPath]
                                   });
                                 }
@@ -320,15 +362,15 @@ class _TodoPageState extends State<TodoPage> {
                                 // update an existing item
                                 if (itemKey != null) {
                                   _updateItem(itemKey, {
-                                    'title': _nameController.text.trim(),
-                                    'desc': _quantityController.text.trim(),
+                                    'title': _titleController.text.trim(),
+                                    'desc': _descController.text.trim(),
                                     'assets': [...imagesUploaded, ...imagesPath]
                                   });
                                 }
 
                                 // Clear the text fields
-                                _nameController.text = '';
-                                _quantityController.text = '';
+                                _titleController.text = '';
+                                _descController.text = '';
 
                                 Navigator.of(context)
                                     .pop(); // Close the bottom sheet
@@ -364,44 +406,96 @@ class _TodoPageState extends State<TodoPage> {
                     // width: double.infinity,
                     child: Container(
                       height: 100,
-                      decoration:
-                          BoxDecoration(color: Colors.lightGreen.shade300),
+                      decoration: BoxDecoration(
+                          color: Colors.yellow.shade50,
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.lime.shade400,
+                                blurRadius: 3,
+                                spreadRadius: 0)
+                          ]),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Flexible(
-                            flex: 4,
-                            child: Container(
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.lightGreen.shade900,
-                              ),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                    // hintText: 'Description',
-                                    border: InputBorder.none,
-                                    filled: true,
-                                    fillColor: Colors.yellow.shade50,
-                                    labelText: ('Comment'),
-                                    labelStyle: const TextStyle(fontSize: 12)),
-                              ),
-                            ),
+                            flex: 5,
+                            child: itemKey != null
+                                ? Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.yellow.shade50,
+                                    ),
+                                    child: TextField(
+                                      controller: _commentController,
+                                      minLines: 4,
+                                      maxLines: null,
+                                      decoration: InputDecoration(
+                                          hintText: 'Write something...',
+                                          border: InputBorder.none,
+                                          filled: true,
+                                          fillColor: Colors.yellow.shade50,
+                                          // labelText: ('Comment'),
+                                          labelStyle:
+                                              const TextStyle(fontSize: 12)),
+                                    ),
+                                  )
+                                : Container(),
                           ),
                           Flexible(
-                            flex: 1,
+                            flex: 2,
                             child: Container(
                               height: 50,
+                              padding: const EdgeInsets.only(top: 10, left: 5),
                               decoration: BoxDecoration(
-                                color: Colors.lime.shade900,
+                                color: Colors.yellow.shade50,
                               ),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  _pickerFile(setModalState);
-                                },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(5),
-                                  child: Icon(Icons.attach_file),
-                                ),
+                              child: Wrap(
+                                // crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  itemKey != null
+                                      ? Container(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 8),
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              // _pickerFile(setModalState);
+                                              _saveComment(
+                                                  itemKey, setModalState);
+                                            },
+                                            child: const Padding(
+                                              padding: EdgeInsets.all(5),
+                                              child: Icon(
+                                                Icons.send_outlined,
+                                                size: 20,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : Container(),
+                                  const SizedBox(
+                                    width: 8,
+                                    height: 8,
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      _pickerFile(setModalState);
+                                    },
+                                    style: ButtonStyle(
+                                      backgroundColor: MaterialStatePropertyAll(
+                                          Colors.green.shade400),
+                                      shadowColor:
+                                          const MaterialStatePropertyAll(
+                                              Colors.transparent),
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(5),
+                                      child: const Icon(
+                                        Icons.attach_file,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
