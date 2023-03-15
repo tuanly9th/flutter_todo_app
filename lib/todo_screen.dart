@@ -121,7 +121,11 @@ class _TodoPageState extends State<TodoPage> {
     }
   }
 
-  // TextFields' controllers
+/* ********************** */
+/* ********************** */
+/* ********************** */
+/* Create / Update Modal */
+  // Modal Create/Update TextFields' controllers
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
@@ -539,6 +543,11 @@ class _TodoPageState extends State<TodoPage> {
               );
             }));
   }
+
+/* End Create/Update Modal */
+/* ********************** */
+/* ********************** */
+/* ********************** */
 
   @override
   Widget build(BuildContext context) {
