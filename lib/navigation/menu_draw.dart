@@ -49,15 +49,21 @@ class MenuDrawer extends StatelessWidget {
           switch (element) {
             case 'Home':
               screen = const MyHomePage(title: 'Home');
-              Navigator.pushNamed(context, '/');
+              if ('/' != ModalRoute.of(context)?.settings.name) {
+                Navigator.pushNamed(context, '/');
+              }
               break;
             case 'BMI':
               screen = const BMICalculator();
-              Navigator.pushNamed(context, '/calculator');
+              if ('/calculator' != ModalRoute.of(context)?.settings.name) {
+                Navigator.pushNamed(context, '/calculator');
+              }
               break;
             case 'TODO':
               screen = const TodoPage();
-              Navigator.pushNamed(context, '/todo');
+              if ('/todo' != ModalRoute.of(context)?.settings.name) {
+                Navigator.pushNamed(context, '/todo');
+              }
               break;
           }
           // Navigator.of(context)

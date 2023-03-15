@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
+import 'package:flutter_first_app/components/confirm_modal.dart';
+import 'package:flutter_first_app/components/show_full_image_modal.dart';
 import 'package:path_provider/path_provider.dart';
 // import 'package:path/path.dart';
 // import 'package:path/path.dart';
@@ -37,6 +39,7 @@ class _TodoPageState extends State<TodoPage> {
   void _refreshItems() {
     setState(() {
       _items = todoBox.loadData();
+      imagesPath = [];
     });
   }
 
@@ -135,6 +138,7 @@ class _TodoPageState extends State<TodoPage> {
       _descController.text = existingItem['desc'];
       setState(() {
         imagesUploaded = existingItem['assets'] ?? [];
+        imagesPath = [];
       });
     } else {
       _titleController.text = '';
@@ -227,7 +231,14 @@ class _TodoPageState extends State<TodoPage> {
                                             backgroundColor:
                                                 MaterialStatePropertyAll(
                                                     Colors.transparent)),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return ImageDialog(
+                                                    imgUrl: path);
+                                              });
+                                        },
                                         child: const Text(
                                           'Hello',
                                           style: TextStyle(fontSize: 8),
@@ -291,8 +302,22 @@ class _TodoPageState extends State<TodoPage> {
                                             iconSize: 16,
                                             onPressed: () {
                                               if (itemKey != null) {
-                                                _deleteComment(
-                                                    itemKey, comment, setModalState);
+                                                showDialog(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return ConfrimModal(
+                                                          onConfirm: () {
+                                                        _deleteComment(
+                                                            itemKey,
+                                                            comment,
+                                                            setModalState);
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      }, onCancel: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      });
+                                                    });
                                               }
                                             },
                                             icon:
@@ -357,6 +382,11 @@ class _TodoPageState extends State<TodoPage> {
                                     'desc': _descController.text,
                                     'assets': [...imagesUploaded, ...imagesPath]
                                   });
+                                  Navigator.of(context)
+                                      .pop(); // Close the bottom sheet
+                                  // Clear the text fields
+                                  _titleController.text = '';
+                                  _descController.text = '';
                                 }
 
                                 // update an existing item
@@ -367,13 +397,6 @@ class _TodoPageState extends State<TodoPage> {
                                     'assets': [...imagesUploaded, ...imagesPath]
                                   });
                                 }
-
-                                // Clear the text fields
-                                _titleController.text = '';
-                                _descController.text = '';
-
-                                Navigator.of(context)
-                                    .pop(); // Close the bottom sheet
                               },
                               child: Text(
                                   itemKey == null ? 'Create New' : 'Update'),
@@ -387,8 +410,17 @@ class _TodoPageState extends State<TodoPage> {
                                     hoverColor: Colors.blueGrey.shade100,
                                     color: Colors.red,
                                     onPressed: () {
-                                      _deleteItem(itemKey);
-                                      Navigator.pop(context);
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return ConfrimModal(onConfirm: () {
+                                              _deleteItem(itemKey);
+                                              Navigator.pop(context);
+                                              Navigator.pop(context);
+                                            }, onCancel: () {
+                                              Navigator.pop(context);
+                                            });
+                                          });
                                     },
                                   )
                                 : Container(),
@@ -517,10 +549,30 @@ class _TodoPageState extends State<TodoPage> {
       drawer: const MenuDrawer(),
       bottomNavigationBar: const MenuBottom(),
       body: _items.isEmpty
-          ? const Center(
-              child: Text(
-                'No Data',
-                style: TextStyle(fontSize: 30),
+          ? Center(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(9999),
+                    gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: <Color>[
+                          Colors.orange,
+                          Colors.purple,
+                          Colors.green.shade700,
+                          Colors.yellow,
+                          Colors.pink.shade400,
+                          Colors.purple,
+                        ],
+                        transform: const GradientRotation(0.18))),
+                child: const Text(
+                  'Let\'s Create Your First Task',
+                  style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
             )
           : ListView.builder(
